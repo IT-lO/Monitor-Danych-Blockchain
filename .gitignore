@@ -69,3 +69,6 @@ $RECYCLE.BIN/
 
 # IDEA folder
 .idea
+
+# File containing API Key for Infura network
+node_provider_info.py
