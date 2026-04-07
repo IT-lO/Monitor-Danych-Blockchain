@@ -29,4 +29,4 @@ async def monitor_new_blocks():
                 block_json = filtered_block_to_json(block)
                 output_path = output_dir / f"block_{number}.json"
                 output_path.write_text(block_json, encoding="utf-8")
-                print(f"Zapisano blok do pliku: {output_path}")
+                print(f"Saved block to file: {output_path}")

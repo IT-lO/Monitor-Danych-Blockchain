@@ -5,7 +5,7 @@ from web3 import Web3
 
 
 def normalize_hex(value: Any) -> Any:
-    """Zamienia HexBytes na zwykły tekst hex."""
+    """Converts HexBytes values to a plain hex string."""
     if value is None:
         return None
 
@@ -16,7 +16,7 @@ def normalize_hex(value: Any) -> Any:
 
 
 def wei_to_eth(value: Any) -> float:
-    """Przelicza wartość z wei na ETH."""
+    """Converts a value from wei to ETH."""
     if value is None:
         return 0.0
 
@@ -24,7 +24,7 @@ def wei_to_eth(value: Any) -> float:
 
 
 def filter_block_data(block: dict[str, Any]) -> dict[str, Any]:
-    """Zwraca podstawowe dane bloku."""
+    """Returns the basic filtered fields for a block."""
     transactions = block.get("transactions", [])
 
     return {
@@ -35,7 +35,7 @@ def filter_block_data(block: dict[str, Any]) -> dict[str, Any]:
 
 
 def filter_transaction_data(transaction: dict[str, Any]) -> dict[str, Any]:
-    """Zwraca wybrane dane pojedynczej transakcji."""
+    """Returns the selected fields for a single transaction."""
     return {
         "transaction_hash": normalize_hex(transaction.get("hash")),
         "from_address": transaction.get("from"),
@@ -47,7 +47,7 @@ def filter_transaction_data(transaction: dict[str, Any]) -> dict[str, Any]:
 
 
 def filter_block_with_transactions(block: dict[str, Any]) -> dict[str, Any]:
-    """Łączy dane bloku i przefiltrowane transakcje w jedną strukturę."""
+    """Combines filtered block data and transactions into one structure."""
     return {
         "block": filter_block_data(block),
         "transactions": [
@@ -58,6 +58,6 @@ def filter_block_with_transactions(block: dict[str, Any]) -> dict[str, Any]:
 
 
 def filtered_block_to_json(block: dict[str, Any]) -> str:
-    """Zamienia przefiltrowany blok na JSON."""
+    """Serializes a filtered block to JSON."""
     filtered_block = filter_block_with_transactions(block)
     return json.dumps(filtered_block, indent=2, ensure_ascii=False)
