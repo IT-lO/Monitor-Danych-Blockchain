@@ -1,11 +1,18 @@
+from pathlib import Path
+
 from web3 import AsyncWeb3
 from web3.providers import WebSocketProvider
+from data_filter import filtered_block_to_json
 from node_provider_info import node_provider_endpoint
 
 # IMPORTANT - Requires a node_provider_info.py file with variable node_provider_endpoint
 # containing URL to the test network.
 
+
 async def monitor_new_blocks():
+    output_dir = Path("filtered_blocks")
+    output_dir.mkdir(exist_ok=True)
+
     async with AsyncWeb3(WebSocketProvider(node_provider_endpoint)) as web3:
         if await web3.is_connected():
             print("Connected")
@@ -16,17 +23,10 @@ async def monitor_new_blocks():
             await web3.eth.get_block("latest")
 
             async for response in web3.socket.process_subscriptions():
-                print(f"Response: {response}")
-
-                number = response['result'].get('number')
-                print(f"Block number: {number}")
-
-                print()
-
-                block = await web3.eth.get_block(number)
-                print(f"Block details: {block}")
-
-                print()
+                number = response["result"].get("number")
 
                 block = await web3.eth.get_block(number, full_transactions=True)
-                print(f"Block details with full transactions: {block}")
+                block_json = filtered_block_to_json(block)
+                output_path = output_dir / f"block_{number}.json"
+                output_path.write_text(block_json, encoding="utf-8")
+                print(f"Zapisano blok do pliku: {output_path}")
