@@ -41,12 +41,14 @@ Aggregated statistics:
 - `total_gas`
 - `avg_gas_per_transaction`
 - `avg_gas_price`
+- `latest_gas_price`
 - `min_gas_price`
 - `max_gas_price`
 - `unique_senders`
 - `unique_receivers`
 - `top_senders`
 - `top_receivers`
+- `per_block_stats`
 
 ## Requirements
 
@@ -92,6 +94,4 @@ pytest
 - [data_filter.py](.\data_filter.py) - data filtering and JSON preparation
 - [data_aggregator.py](.\data_aggregator.py) - aggregation of statistics from filtered blocks
 - [tests/test_data_filter.py](.\tests\test_data_filter.py) - unit tests for filtering
-- [tests/test_data_aggregator.py](.\tests\test_statistics_aggregator.py) - unit tests for aggregation
-
-
+- [tests/test_data_aggregator.py](.\tests\test_data_aggregator.py) - unit tests for aggregation
