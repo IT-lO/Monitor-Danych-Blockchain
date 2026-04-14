@@ -4,6 +4,7 @@ Project for monitoring new Ethereum Sepolia blocks over WebSocket.
 
 The program:
 - connects to an RPC node using `web3`
+- collects full data of last 100 blocks
 - listens for new blocks
 - fetches full block data together with transactions
 - filters only the selected fields
