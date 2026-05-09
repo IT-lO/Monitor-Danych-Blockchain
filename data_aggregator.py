@@ -31,7 +31,9 @@ def top_addresses(counter: Counter[str], limit: int = 5) -> list[dict[str, Any]]
     ]
 
 
-def aggregate_filtered_blocks(filtered_blocks_dir: Path | str = "filtered_blocks") -> dict[str, Any]:
+def aggregate_filtered_blocks(
+    filtered_blocks_dir: Path | str = "filtered_blocks",
+) -> dict[str, Any]:
     """Aggregates statistics from all filtered block JSON files."""
     input_dir = Path(filtered_blocks_dir)
     # Only block files, sorted for deterministic results (for tests).
@@ -53,6 +55,7 @@ def aggregate_filtered_blocks(filtered_blocks_dir: Path | str = "filtered_blocks
     latest_block_number = None
     latest_gas_price = 0
     per_block_stats = []
+    max_tx_value = 0.0
 
     for block_file in block_files:
         filtered_block = load_filtered_block(block_file)
@@ -70,11 +73,17 @@ def aggregate_filtered_blocks(filtered_blocks_dir: Path | str = "filtered_blocks
 
         total_transactions += transaction_count
 
-        if min_transactions_in_block is None or transaction_count < min_transactions_in_block:
+        if (
+            min_transactions_in_block is None
+            or transaction_count < min_transactions_in_block
+        ):
             min_transactions_in_block = transaction_count
             block_with_min_transactions = block_number
 
-        if max_transactions_in_block is None or transaction_count > max_transactions_in_block:
+        if (
+            max_transactions_in_block is None
+            or transaction_count > max_transactions_in_block
+        ):
             max_transactions_in_block = transaction_count
             block_with_max_transactions = block_number
 
@@ -118,38 +127,66 @@ def aggregate_filtered_blocks(filtered_blocks_dir: Path | str = "filtered_blocks
 
             if block_max_gas_price is None or gas_price > block_max_gas_price:
                 block_max_gas_price = gas_price
+            if value_eth > max_tx_value:
+                max_tx_value = value_eth
 
-        per_block_stats.append({
-            "block_number": block_number,
-            "block_hash": block_hash,
-            "transaction_count": transaction_count,
-            "total_value_eth": round_value(block_total_value_eth),
-            "avg_value_eth_per_transaction": round_value(safe_average(block_total_value_eth, transaction_count)),
-            "zero_value_transactions": block_zero_value_transactions,
-            "zero_value_transaction_ratio": round_value(safe_average(block_zero_value_transactions, transaction_count)),
-            "total_gas": block_total_gas,
-            "avg_gas_per_transaction": round_value(safe_average(block_total_gas, transaction_count)),
-            "avg_gas_price": round_value(safe_average(block_total_gas_price, transaction_count)),
-            "min_gas_price": block_min_gas_price if block_min_gas_price is not None else 0,
-            "max_gas_price": block_max_gas_price if block_max_gas_price is not None else 0,
-        })
+        per_block_stats.append(
+            {
+                "block_number": block_number,
+                "block_hash": block_hash,
+                "transaction_count": transaction_count,
+                "total_value_eth": round_value(block_total_value_eth),
+                "avg_value_eth_per_transaction": round_value(
+                    safe_average(block_total_value_eth, transaction_count)
+                ),
+                "zero_value_transactions": block_zero_value_transactions,
+                "zero_value_transaction_ratio": round_value(
+                    safe_average(block_zero_value_transactions, transaction_count)
+                ),
+                "total_gas": block_total_gas,
+                "avg_gas_per_transaction": round_value(
+                    safe_average(block_total_gas, transaction_count)
+                ),
+                "avg_gas_price": round_value(
+                    safe_average(block_total_gas_price, transaction_count)
+                ),
+                "min_gas_price": (
+                    block_min_gas_price if block_min_gas_price is not None else 0
+                ),
+                "max_gas_price": (
+                    block_max_gas_price if block_max_gas_price is not None else 0
+                ),
+            }
+        )
 
     processed_blocks = len(block_files)
 
     return {
         "processed_blocks": processed_blocks,
         "total_transactions": total_transactions,
-        "avg_transactions_per_block": round_value(safe_average(total_transactions, processed_blocks)),
-        "min_transactions_in_block": min_transactions_in_block if min_transactions_in_block is not None else 0,
+        "avg_transactions_per_block": round_value(
+            safe_average(total_transactions, processed_blocks)
+        ),
+        "min_transactions_in_block": (
+            min_transactions_in_block if min_transactions_in_block is not None else 0
+        ),
         "block_with_min_transactions": block_with_min_transactions,
-        "max_transactions_in_block": max_transactions_in_block if max_transactions_in_block is not None else 0,
+        "max_transactions_in_block": (
+            max_transactions_in_block if max_transactions_in_block is not None else 0
+        ),
         "block_with_max_transactions": block_with_max_transactions,
         "total_value_eth": round_value(total_value_eth),
-        "avg_value_eth_per_transaction": round_value(safe_average(total_value_eth, total_transactions)),
+        "avg_value_eth_per_transaction": round_value(
+            safe_average(total_value_eth, total_transactions)
+        ),
         "zero_value_transactions": zero_value_transactions,
-        "zero_value_transaction_ratio": round_value(safe_average(zero_value_transactions, total_transactions)),
+        "zero_value_transaction_ratio": round_value(
+            safe_average(zero_value_transactions, total_transactions)
+        ),
         "total_gas": total_gas,
-        "avg_gas_per_transaction": round_value(safe_average(total_gas, total_transactions)),
+        "avg_gas_per_transaction": round_value(
+            safe_average(total_gas, total_transactions)
+        ),
         "avg_gas_price": round_value(safe_average(total_gas_price, total_transactions)),
         "latest_gas_price": latest_gas_price,
         "min_gas_price": min_gas_price if min_gas_price is not None else 0,
@@ -159,6 +196,7 @@ def aggregate_filtered_blocks(filtered_blocks_dir: Path | str = "filtered_blocks
         "top_senders": top_addresses(sender_counter),
         "top_receivers": top_addresses(receiver_counter),
         "per_block_stats": per_block_stats,
+        "max_tx_value": max_tx_value,
     }
 
 
