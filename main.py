@@ -23,4 +23,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n[bold red]Monitor stopped by user.[/bold red]")
+        print("\nMonitor stopped by user.")
