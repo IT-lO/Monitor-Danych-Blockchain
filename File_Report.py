@@ -1,6 +1,6 @@
 import datetime
 import json
-
+from pathlib import Path
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -95,12 +95,18 @@ def create_top_addresses_table(items):
     return table
 
 
-def build_tx_per_block_chart(per_block_stats):
-    labels = [str(x["block_number"]) for x in per_block_stats]
-    values = [x["transaction_count"] for x in per_block_stats]
+def build_tx_per_block_chart(per_block_stats, top_n=15):
+    sorted_blocks = sorted(
+        per_block_stats,
+        key=lambda x: x["transaction_count"],
+        reverse=True
+    )[:top_n]
+
+    labels = [str(x["block_number"]) for x in sorted_blocks]
+    values = [x["transaction_count"] for x in sorted_blocks]
 
     drawing = Drawing(520, 260)
-    drawing.add(String(150, 235, "Number of transactions by block", fontSize=13))
+    drawing.add(String(145, 235, f"Top {top_n} blocks by transaction count", fontSize=13))
 
     chart = VerticalBarChart()
     chart.x = 45
@@ -109,26 +115,36 @@ def build_tx_per_block_chart(per_block_stats):
     chart.height = 150
     chart.data = [values]
     chart.categoryAxis.categoryNames = labels
-    chart.categoryAxis.labels.angle = 35
-    chart.categoryAxis.labels.dy = -12
+    chart.categoryAxis.labels.angle = 30
+    chart.categoryAxis.labels.dy = -10
     chart.categoryAxis.labels.fontSize = 7
+    chart.categoryAxis.labelAxisMode = "low"
+    chart.categoryAxis.visibleTicks = 0
+
     chart.valueAxis.valueMin = 0
     chart.valueAxis.valueMax = max(values) + 20
-    chart.valueAxis.valueStep = 20
+    chart.valueAxis.valueStep = max(10, int((max(values) + 20) / 6))
     chart.valueAxis.labels.fontSize = 8
+
     chart.bars[0].fillColor = colors.HexColor("#4F81BD")
 
     drawing.add(chart)
     return drawing
 
 
-def build_eth_per_block_chart(per_block_stats):
-    labels = [str(x["block_number"]) for x in per_block_stats]
-    values = [x["total_value_eth"] for x in per_block_stats]
+def build_eth_per_block_chart(per_block_stats, top_n=15):
+    sorted_blocks = sorted(
+        per_block_stats,
+        key=lambda x: x["total_value_eth"],
+        reverse=True
+    )[:top_n]
 
+    labels = [str(x["block_number"]) for x in sorted_blocks]
+    values = [x["total_value_eth"] for x in sorted_blocks]
     points = list(enumerate(values))
+
     drawing = Drawing(520, 260)
-    drawing.add(String(170, 235, "Total ETH value by block", fontSize=13))
+    drawing.add(String(155, 235, f"Top {top_n} blocks by ETH value", fontSize=13))
 
     chart = LinePlot()
     chart.x = 45
@@ -136,14 +152,18 @@ def build_eth_per_block_chart(per_block_stats):
     chart.width = 430
     chart.height = 150
     chart.data = [points]
+
     chart.lines[0].strokeColor = colors.HexColor("#70AD47")
     chart.lines[0].strokeWidth = 2
+
     chart.xValueAxis.valueMin = 0
     chart.xValueAxis.valueMax = len(values) - 1
     chart.xValueAxis.valueStep = 1
+
     chart.yValueAxis.valueMin = 0
     chart.yValueAxis.valueMax = max(values) + 0.5
     chart.yValueAxis.valueStep = max(0.5, round(max(values) / 5, 2))
+
     chart.xValueAxis.labels.fontSize = 7
     chart.yValueAxis.labels.fontSize = 8
 
@@ -152,7 +172,7 @@ def build_eth_per_block_chart(per_block_stats):
     x_start = 45
     step = 430 / max(1, len(labels) - 1)
     for i, label in enumerate(labels):
-        drawing.add(String(x_start + i * step - 8, 40, label[-4:], fontSize=6, angle=35))
+        drawing.add(String(x_start + i * step - 8, 40, label, fontSize=6, angle=35))
 
     return drawing
 
@@ -393,6 +413,8 @@ def startReport():
     with open("aggregated_stats.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
+    sciezka = Path("Reports")
+    sciezka.mkdir(parents=True, exist_ok=True)
     currentDate = datetime.datetime.now()
     correctedDate = currentDate.strftime("%Y-%m-%d_%H-%M-%S")
 
